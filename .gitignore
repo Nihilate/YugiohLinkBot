@@ -55,3 +55,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#YGOBot-specific
+YGOconfig.py
+
+#SQLite stuff
+*.db
