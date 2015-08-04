@@ -233,3 +233,29 @@ while True:
     #print how long the run took and wait a little while (to avoid spamming Reddit with requests)
     print("Run complete: %0.2fs\n" % (time.time()-initTime))
     time.sleep(5)
+
+'''START OF THE COMMENT STREAM SWITCHOVER'''
+'''# ------------------------------------#
+#Here's the stuff that actually gets run
+
+subredditlist = "nihilate+yugioh+YGOBinders+YGOSales+yugioh101"
+
+def start():
+    print('Starting comment stream:')
+
+    #This opens a constant stream of comments. It will loop until there's a major error (usually this means the Reddit access token needs refreshing)
+    comment_stream = praw.helpers.comment_stream(r, subredditlist, limit=250, verbosity=0)
+
+    for comment in comment_stream:
+        #DO STUFF
+
+#Initialise Reddit.
+setupReddit()
+
+#Loop the comment stream until the Reddit access token expires. Then get a new access token and start the stream again.
+while 1:
+    try:        
+        start()
+    except Exception as e:
+        traceback.print_exc()
+        login()'''
