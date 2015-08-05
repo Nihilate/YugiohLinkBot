@@ -55,7 +55,6 @@ sqlConn.commit()
 
 #logs in to reddit
 r = praw.Reddit(USERAGENT)
-'''r.login(USERNAME, PASSWORD)'''
 
 def login():
     try:
@@ -117,11 +116,6 @@ def searchForCards(updateTime):
                                 #add it to the already done pile
                                 sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [submission.id])
                                 sqlConn.commit()
-                            '''else:
-                                print("Self-post request has had an error in processing, adding to database")
-                                commentReply = "An error has occurred in processing your request. It's (probably) not your fault - sorry for the inconvinience! My developer has been informed, hopefully I'll be fixed soon.\n\n***\n" + CommentBuilder.buildCommentFooter()
-                                submission.add_comment(commentReply)'''
-
                             
                         except sqlite3.Error, e:
                             traceback.print_exc()
@@ -180,11 +174,7 @@ def searchForCards(updateTime):
 
                             #add it to the already done pile
                             sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [comment.id])
-                            sqlConn.commit()
-                        '''else:
-                            print("Comment has had an error in processing, adding to database")
-                            commentReply = "An error has occurred in processing your request. It's (probably) not your fault - sorry for the inconvinience! My developer has been informed, hopefully I'll be fixed soon.\n\n***\n" + CommentBuilder.buildCommentFooter()
-                            comment.reply(commentReply)'''                    
+                            sqlConn.commit()                  
                     except sqlite3.Error, e:
                         traceback.print_exc()
                         print("Error adding to database, rolling back.")
@@ -247,7 +237,58 @@ def start():
     comment_stream = praw.helpers.comment_stream(r, subredditlist, limit=250, verbosity=0)
 
     for comment in comment_stream:
-        #DO STUFF
+        if not (CSValidator.isValidComment(r, comment, USERNAME)):
+            try:
+                sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [comment.id])
+                sqlConn.commit()
+            except:
+                if sqlConn:
+                    sqlConn.rollback()
+                pass
+            continue
+
+        commentReply = CommentBuilder.buildReply(comment.body, False)
+
+        #if the bot is posting in a vent thread (which are ALL CAPS), make sure the bot talks in CAPS TOO
+        if (commentReply != ''):
+            if("VENT THREAD" in comment.submission.title):
+                commentReply = CommentBuilder.convertCase(True, commentReply)
+            elif("happiness thread" in comment.submission.title):
+                commentReply = CommentBuilder.convertCase(False, commentReply)
+
+            try:
+                comment.reply(commentReply)
+                print("Comment made.\n")
+
+                try:
+                    sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [comment.id])
+                    sqlConn.commit()
+                except:
+                    traceback.print_exc()
+                    if sqlConn:
+                        sqlConn.rollback()
+            except:
+                traceback.print_exc()
+
+                if ("TOO_LONG" in str(e)):
+                    print("Self-post request is too long, adding to database")
+                    commentReply = "Hey buddy, I know you want to link a bunch of cards or whatever, but you've tried to link *way* too many. Unlike me, Reddit's software just too mentally and emotionally fragile to deal with more than 10,000 characters, so I can't post a comment that large.\n\nAs a heads up for next time, try using my {normal tags} instead of my {{expanded tags}} - they keep the links but cut off the descriptions, meaning you can post to your hearts content!\n\nNote: replying directly to me with another request will not trigger a response.\n\n***\n" + CommentBuilder.buildCommentFooter()
+                    submission.add_comment(commentReply)
+
+                    try:
+                        sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [submission.id])
+                        sqlConn.commit()
+                    except:
+                        if sqlConn:
+                            sqlConn.rollback()
+        else:
+            try:
+                sqlCur.execute('INSERT INTO oldcomments VALUES(?)', [comment.id])
+                sqlConn.commit()
+            except:
+                traceback.print_exc()
+                if sqlConn:
+                    sqlConn.rollback()
 
 #Initialise Reddit.
 setupReddit()
