@@ -16,6 +16,8 @@ def buildReply(commentText, isSubmission):
     foundCards = []
     commentReply = ''
 
+    commentText = re.sub(r"^>(.*?)(\n|$)", "", commentText, flags=re.MULTILINE)
+
     #add replies from {small} calls and {{large}} calls
     commentReply = commentReply + buildSmallRequests(commentText, foundCards)
     commentReply = commentReply + buildLargeRequests(commentText, foundCards)
