@@ -312,4 +312,4 @@ def buildLargeOCGCardComment(cardData):
 #  Builds the comment footer
 #
 def buildCommentFooter():
-    return "\n^^To ^^use: ^^{Normal ^^Info} ^^or ^^{{Expanded ^^Info}}. ^^OCG ^^cards ^^now ^^available ^^- ^^big ^^thanks ^^to ^^[monovertex!](http://www.reddit.com/user/monovertex) [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) [^^Source.](https://github.com/Nihilate/YugiohLinkBot)"
+    return "\n^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}} ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot) ^^| [^^\/u/TheDungeonCrawler ^^is ^^the ^^winner ^^of ^^the ^^scavenger ^^hunt](https://www.reddit.com/r/yugioh/comments/3kxin5/yugioh_arcv_episode_73_discussion_the_crawling/cv1hcw1)"
