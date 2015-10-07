@@ -58,6 +58,7 @@ target/
 
 #YGOBot-specific
 YGOconfig.py
+Config.py
 
 #SQLite stuff
 *.db
