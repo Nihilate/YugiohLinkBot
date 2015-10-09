@@ -1,4 +1,4 @@
-from CardHandler import getCard
+import CardDataHandler
 import re
 import pprint
 
@@ -20,10 +20,10 @@ BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}}) ^^| [^^Issues?](ht
 FLAVOUR_SIGNATURE = ' ^^| [^^\/u/TheDungeonCrawler ^^is ^^the ^^winner ^^of ^^the ^^scavenger ^^hunt](https://www.reddit.com/r/yugioh/comments/3kxin5/yugioh_arcv_episode_73_discussion_the_crawling/cv1hcw1)'
 SIGNATURE = BASE_SIGNATURE + FLAVOUR_SIGNATURE
 
-def addSeparator():
-    return '\n\n'
+def getSignature():
+    return SIGNATURE
 
-def getFormattedCard(card, isExpanded):
+def formatCardData(card, isExpanded):
     if isExpanded:
         if card['cardtype'].lower() == 'monster':
             return MONSTER_CARD_TEMPLATE_EXPANDED.format(
@@ -66,37 +66,9 @@ def getFormattedCard(card, isExpanded):
                 infosyntax = ', ' if card['pricedata'] else '',
                 pricedata = '[($)]({})'.format(card['pricedata']) if card['pricedata'] else '')
 
-def buildComment(comment):
-    reply = ''
-    normal = []
-    expanded = []
-    
-    for match in re.finditer("(?<=(?<!\{)\{)([^{}]*)(?=\}(?!\}))", comment, re.S):
-        card = getCard(match.group(1))
-        if (card['name'] not in (str(i[1]['name']) for i in enumerate(normal))) and (card['name'] not in (str(i[1]['name']) for i in enumerate(expanded))):
-            normal.append(card)
-        else:
-            print("Card already exists in comment.")
-    for match in re.finditer("\{{2}([^}]*)\}{2}", comment, re.S):
-        card = getCard(match.group(1))
-        if (card['name'] not in (str(i[1]['name']) for i in enumerate(normal))) and (card['name'] not in (str(i[1]['name']) for i in enumerate(expanded))):
-            expanded.append(card)
-        else:
-            print("Card already exists in comment.")
-
-    if (len(normal) + len(expanded)) >= 6:
-        normal.extend(expanded)
-        expanded = []
-
-    for expandedRequest in expanded:
-        reply += getFormattedCard(expandedRequest, True) + addSeparator()
-
-    for normalRequest in normal:
-        reply += getFormattedCard(normalRequest, False) + addSeparator()
-
-    if reply != '':
-        reply += SIGNATURE
-
-    return reply
-
-pprint.pprint(buildComment('{{sword hunter}} {{red eyes black dragon}} {{sword hunter}} {{scapegoat}} {{jam breeding machine}} {{blue eyes white dragon}} {{gadget soldier}}'))
+def buildRequestComment(cardname, isExpanded):
+    data = CardDataHandler.getCardData(cardname)
+    if data:
+        return formatCardData(data, isExpanded)
+    else:
+        return None

@@ -132,7 +132,6 @@ def getOCGCardData(url):
         return data
         
     except:
-        traceback.print_exc()
         return None
 
 def getPricesURL(cardName):
@@ -142,73 +141,97 @@ def getWikiaURL(cardName):
     return "http://yugioh.wikia.com/wiki/" + cardName.replace(" ", "_")
 
 def formatTCGData(data):
-    formatted = {}
-    
-    formatted['name'] = data['name']
-    formatted['wikia'] = getWikiaURL(data['name'])
-    formatted['pricedata'] = getPricesURL(data['name'])
-    formatted['image'] = data['image']
-    formatted['text'] = data['text'].replace('\n\n', '  \n')
-    formatted['cardtype'] = data['card_type']
-    
-    if formatted['cardtype'].lower() == 'monster':
-        formatted['attribute'] = data['family'].upper()
-        formatted['types'] = data['type'].split('/')
+    try:
+        formatted = {}
+        
+        formatted['name'] = data['name']
+        formatted['wikia'] = getWikiaURL(data['name'])
+        formatted['pricedata'] = getPricesURL(data['name'])
+        formatted['image'] = data['image']
+        formatted['text'] = data['text'].replace('\n\n', '  \n')
+        formatted['cardtype'] = data['card_type']
+        
+        if formatted['cardtype'].lower() == 'monster':
+            formatted['attribute'] = data['family'].upper()
+            formatted['types'] = data['type'].split('/')
 
-        if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
-            formatted['leveltype'] = 'Rank'
+            if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = 'Rank'
+            else:
+                formatted['leveltype'] = 'Level'
+
+            formatted['level'] = data['level']
+            formatted['att'] = data['atk']
+            formatted['def'] = data['def']
         else:
-            formatted['leveltype'] = 'Level'
+            formatted['property'] = data['property']
 
-        formatted['level'] = data['level']
-        formatted['att'] = data['atk']
-        formatted['def'] = data['def']
-    else:
-        formatted['property'] = data['property']
-
-    return formatted
+        return formatted
+    except Exception as e:
+        return None
 
 def formatOCGData(data):
-    formatted = {}
-    
-    formatted['name'] = data['name']
-    formatted['wikia'] = getWikiaURL(data['name'])
-    formatted['pricedata'] = None
-    formatted['image'] = data['image']
-    formatted['text'] = data['description'].replace('\n', '  \n')
-    formatted['cardtype'] = data['type']
-    
-    if formatted['cardtype'].lower() == 'monster':
-        formatted['attribute'] = data['monster_attribute'].upper()
-        formatted['types'] = data['monster_types']
+    try:
+        formatted = {}
+        
+        formatted['name'] = data['name']
+        formatted['wikia'] = getWikiaURL(data['name'])
+        formatted['pricedata'] = None
+        formatted['image'] = data['image']
+        formatted['text'] = data['description'].replace('\n', '  \n')
+        formatted['cardtype'] = data['type']
+        
+        if formatted['cardtype'].lower() == 'monster':
+            formatted['attribute'] = data['monster_attribute'].upper()
+            formatted['types'] = data['monster_types']
 
-        if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
-            formatted['leveltype'] = 'Rank'
+            if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = 'Rank'
+            else:
+                formatted['leveltype'] = 'Level'
+
+            formatted['level'] = data['monster_level']
+            formatted['att'] = data['monster_attack']
+            formatted['def'] = data['monster_defense']
         else:
-            formatted['leveltype'] = 'Level'
+            formatted['property'] = data['spell_trap_property']
 
-        formatted['level'] = data['monster_level']
-        formatted['att'] = data['monster_attack']
-        formatted['def'] = data['monster_defense']
-    else:
-        formatted['property'] = data['spell_trap_property']
+        return formatted
+    except Exception as e:
+        return None
 
-    return formatted
+def getCardData(searchText):
+    try:
+        print('Searching for: ' + searchText)
+        
+        cardName = getClosestTCGCardname(searchText)
+        if (cardName): #TCG
+            tcgData = getTCGCardData(sanitiseCardname(cardName))
 
-@timing
-def getCard(searchText):
-    print('Searching for: ' + searchText)
-    
-    cardName = getClosestTCGCardname(searchText)
-    if (cardName): #TCG
-        print ("Found: " + cardName + " (TCG)")
-        tcgData = getTCGCardData(sanitiseCardname(cardName))
-        return formatTCGData(tcgData)
-    else: #OCG
-        wikiURL = getOCGCardURL(searchText)
-        if (wikiURL):
-            print ("Found: " + wikiURL.replace('http://yugioh.wikia.com/wiki/', '').replace('_', ' ') + " (OCG)")
-            ocgData = getOCGCardData(wikiURL)
-            return formatOCGData(ocgData)
-        else:
-            print ("Card not found.")
+            formattedData = formatTCGData(tcgData)
+
+            if formattedData:
+                print("(TCG) Found: " + tcgData['name'] + '\n')
+            else:
+                print ("Card not found.")
+                
+            return formattedData
+        else: #OCG
+            wikiURL = getOCGCardURL(searchText)
+            if (wikiURL):
+                ocgData = getOCGCardData(wikiURL)
+
+                formattedData = formatOCGData(ocgData)
+
+                if formattedData:
+                    print("(OCG) Found: " + ocgData['name'] + '\n')
+                else:
+                    print ("Card not found.")
+
+                return formattedData
+            else:
+                print ("Card not found.")
+                return None
+    except:
+        return None
+               
