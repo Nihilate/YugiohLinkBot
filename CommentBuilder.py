@@ -1,4 +1,5 @@
 import CardDataHandler
+import DatabaseHandler
 import re
 import pprint
 
@@ -6,14 +7,16 @@ MONSTER_CARD_TEMPLATE_NORMAL = ('{name}{image} - {wikia}{infosyntax}{pricedata}'
 
 
 MONSTER_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\n\n'
-                                '^({leveltype}{level}{cardtype}{types}{attribute})\n\n'
+                                '^({leveltype}{level}{cardtype}{types}{attribute})  \n'
+                                '^({stats})\n\n'
                                 '{text}\n\n'
                                 '{att}{defn}')
     
 SPELL_CARD_TEMPLATE_NORMAL = ('{name}{image} - {wikia}{infosyntax}{pricedata}')
 
 SPELL_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\n\n'
-                                '^({cardtype}{cardproperty})\n\n'
+                                '^({cardtype}{cardproperty})  \n'
+                                '^({stats})\n\n'
                                 '{text}')
 
 BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}}) ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
@@ -25,6 +28,8 @@ def getSignature():
 
 def formatCardData(card, isExpanded):
     if isExpanded:
+        requestStats = DatabaseHandler.getStats(card['name'])
+        
         if card['cardtype'].lower() == 'monster':
             return MONSTER_CARD_TEMPLATE_EXPANDED.format(
                 name = '[**{}**]'.format(card['name']),
@@ -39,7 +44,10 @@ def formatCardData(card, isExpanded):
                 attribute = 'Attribute: {}'.format(card['attribute'].upper()),
                 text = '>{}'.format(card['text']),
                 att = '>ATK: {}, '.format(card['att']),
-                defn = 'DEF: {}'.format(card['def']))
+                defn = 'DEF: {}'.format(card['def']),
+                stats = 'Stats: {total} requests - {percentage}% of all requests'.format(
+                    total=requestStats['total'],
+                    percentage=str(round(requestStats['totalAsPercentage'],2))))
         else:
             return SPELL_CARD_TEMPLATE_EXPANDED.format(
                 name = '[**{}**]'.format(card['name']),
@@ -49,7 +57,10 @@ def formatCardData(card, isExpanded):
                 pricedata = '[($)]({})'.format(card['pricedata']) if card['pricedata'] else '',
                 cardtype = 'Category: {}, '.format(card['cardtype'].title()),
                 cardproperty = 'Property: {}'.format(card['property']),
-                text = '>{}'.format(card['text']))
+                text = '>{}'.format(card['text']),
+                stats = 'Stats: {total} requests - {percentage}% of all requests'.format(
+                    total=requestStats['total'],
+                    percentage=str(round(requestStats['totalAsPercentage'],2))))
     else:
         if card['cardtype'].lower() == 'monster':
             return MONSTER_CARD_TEMPLATE_NORMAL.format(

@@ -134,6 +134,29 @@ def getClosestTCGCardname(searchText):
         print("Error finding cards.")
         return None
 
+def getStats(searchText):
+    try:
+        requestDict = {}
+        
+        cur.execute("SELECT COUNT(*) FROM requests")
+        total = int(cur.fetchone()[0]) + 1
+        cur.execute("SELECT COUNT(*) FROM requests WHERE name = %s", (searchText, ))
+        requestTotal = int(cur.fetchone()[0]) + 1
+        #+1 since we add to requests AFTER we call this
+        
+        requestDict['total'] = requestTotal
+
+        totalAsPercentage = (float(requestTotal)/total) * 100
+        requestDict['totalAsPercentage'] = totalAsPercentage
+
+        return requestDict
+
+    except Exception as e:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+        return None
+
 TCGArray = []
 conn = psycopg2.connect("dbname='" + Config.dbname + "' user='" + Config.dbuser + "' host='" + Config.dbhost + "' password='" + Config.dbpassword + "'")
 cur = conn.cursor()

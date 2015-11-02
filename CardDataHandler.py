@@ -211,7 +211,7 @@ def getCardData(searchText):
             formattedData = formatTCGData(tcgData)
 
             if formattedData:
-                print("(TCG) Found: " + tcgData['name'] + '\n')
+                print("(TCG) Found: " + tcgData['name'])
             else:
                 print ("Card not found.")
                 
@@ -224,7 +224,7 @@ def getCardData(searchText):
                 formattedData = formatOCGData(ocgData)
 
                 if formattedData:
-                    print("(OCG) Found: " + ocgData['name'] + '\n')
+                    print("(OCG) Found: " + ocgData['name'])
                 else:
                     print ("Card not found.")
 
