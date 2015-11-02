@@ -20,7 +20,7 @@ SPELL_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\
                                 '{text}')
 
 BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}}) ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
-FLAVOUR_SIGNATURE = ' ^^| [^^\/u/TheDungeonCrawler ^^is ^^the ^^winner ^^of ^^the ^^scavenger ^^hunt](https://www.reddit.com/r/yugioh/comments/3kxin5/yugioh_arcv_episode_73_discussion_the_crawling/cv1hcw1)'
+FLAVOUR_SIGNATURE = '^^| ^^New: [^^Version ^^2 ^^released!](https://www.reddit.com/r/yugioh/comments/3r73pk/yugiohlinkbot_v2_harder_better_faster_stronger/)'
 SIGNATURE = BASE_SIGNATURE + FLAVOUR_SIGNATURE
 
 def getSignature():

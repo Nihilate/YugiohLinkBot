@@ -40,7 +40,7 @@ class SubmissionProcessor(object):
                         reply = self.convertCase(False, reply)
 
                     DatabaseHandler.addComment(submission.id, author, submission.subreddit, True)
-                    #submission.add_comment(reply)
+                    submission.add_comment(reply)
                     print("Comment made.\n")
                 else:
                     if ('{' in submission.selftext and '}' in submission.selftext):

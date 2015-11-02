@@ -65,7 +65,7 @@ class YugiohLinkBot(object):
                             DatabaseHandler.addRequest(card, author, comment.subreddit)
                         
                         DatabaseHandler.addComment(comment.id, author, comment.subreddit, True)
-                        #comment.reply(reply)
+                        comment.reply(reply)
                         print("Comment made.\n")
                     else:
                         if ('{' in comment.body and '}' in comment.body):
