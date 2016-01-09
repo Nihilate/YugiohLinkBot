@@ -1,6 +1,7 @@
 import praw
 import re
 import time
+import pprint
 
 import traceback
 
@@ -63,6 +64,11 @@ class YugiohLinkBot(object):
                         cards = re.findall('\[\*\*(.+?)\*\*\]\(', reply)
                         for card in cards:
                             DatabaseHandler.addRequest(card, author, comment.subreddit)
+
+                        if("VENT THREAD" in comment.link_title):
+                            reply = self.submissionProcessor.convertCase(True, reply)
+                        elif("happiness thread" in comment.link_title):
+                            reply = self.submissionProcessor.convertCase(False, reply)
                         
                         DatabaseHandler.addComment(comment.id, author, comment.subreddit, True)
                         comment.reply(reply)

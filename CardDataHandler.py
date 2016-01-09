@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+
 from functools import lru_cache
 import requests
 from urllib.parse import quote_plus
@@ -7,9 +9,27 @@ from DatabaseHandler import getClosestTCGCardname
 import traceback
 import re
 import pprint
+import difflib
 
 TCG_BASE_URL = 'http://yugiohprices.com/api'
 OCG_BASE_URL = 'http://yugioh.wikia.com/api/v1'
+
+toIgnore = ['anime)',
+            'manga)',
+            'card ruling',
+            'card galler',
+            'card errata',
+            'card tip',
+            'card appearance',
+            'card trivia',
+            'list of',
+            'card list',
+            'def',
+            'atk',
+            '(dor)',
+            '(cm)',
+            '(ddm)',
+            '(2)']
 
 BREAK_TOKEN = '__BREAK__'
 
@@ -25,6 +45,36 @@ def getOCGCardURL(searchText):
         data = searchResults.json()['items'][0]['url']
         return data
     except:
+        return None
+
+@lru_cache(maxsize=128)
+def getNonEnglishOCGCardData(searchText):
+    try:
+        endPoint = '/Search/List?query='
+        resultLimit = '&limit=50'
+        searchResults = requests.get(OCG_BASE_URL + endPoint + searchText + resultLimit)
+        data = searchResults.json()['items']
+
+        cardURL = None
+
+        for result in data:
+            if True in [True if word.lower() in result['title'].lower() else False for word in toIgnore]:
+                continue
+            else:
+                cardURL = result['url']
+                
+                try:
+                    cardData = getOCGCardData(cardURL)
+                    closest = difflib.get_close_matches(searchText, cardData['languages'], 1, 0.95)[0]
+                    
+                    if closest:
+                        return cardData
+                except Exception as e:
+                    pass
+            
+        return None
+    except:
+        traceback.print_exc()
         return None
 
 @lru_cache(maxsize=128)
@@ -56,7 +106,6 @@ def getTCGCardData(cardName):
                 json['data']['image'] = getTCGCardImage(cardName);
                 return json['data']
 
-@lru_cache(maxsize=128)
 def getOCGCardData(url):
     try:
         html = requests.get(url)
@@ -79,6 +128,22 @@ def getOCGCardData(url):
                 statuses.find('th a[title="Traditional Format"]').eq(0)
                 .parents('th').next().text())
         }
+
+        data['languages'] = []
+
+        romajiCandidates = card.find('tr.cardtablerow th.cardtablerowheader')
+
+        for candidate in romajiCandidates.items():
+            if 'rōmaji' in candidate.text():
+                data['languages'].append(candidate.parents('tr').find('td').text())
+
+        try:
+            languages = card.find('tr.cardtablerow td.cardtablerowdata span')
+            for language in languages.items():
+                data['languages'].append(language.text())  
+        except Exception as e:
+            print(e)
+
 
         description_element = (card.find('td table table').eq(0).find('tr').eq(2).find('td').eq(0))
         description_element.html(re.sub(r'<br ?/?>', BREAK_TOKEN, description_element.html()))
@@ -226,12 +291,27 @@ def getCardData(searchText):
                 if formattedData:
                     print("(OCG) Found: " + ocgData['name'])
                 else:
-                    print ("Card not found.")
+                    lData = getNonEnglishOCGCardData(searchText)
+                    lFormattedData = formatOCGData(lData)
+
+                    if lFormattedData:
+                        print("(OCG-L) Found: " + lData['name'])
+                    else:
+                        print ("Card not found.")
+
+                    return lFormattedData
 
                 return formattedData
             else:
-                print ("Card not found.")
-                return None
+                lData = getNonEnglishOCGCardData(searchText)
+                lFormattedData = formatOCGData(lData)
+
+                if lFormattedData:
+                    print("(OCG-L) Found: " + lData['name'])
+                else:
+                    print ("Card not found.")
+
+                return lFormattedData
     except:
+        traceback.print_exc()
         return None
-               

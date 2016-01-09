@@ -122,7 +122,7 @@ def addRequest(name, requester, subreddit):
 def getClosestTCGCardname(searchText):
     try:
         global TCGArray
-        closestCard = difflib.get_close_matches(searchText, TCGArray, 1, 0.75)
+        closestCard = difflib.get_close_matches(searchText, TCGArray, 1, 0.95)
 
         if closestCard:
             return closestCard[0]
