@@ -65,14 +65,14 @@ def formatCardData(card, isExpanded):
         if card['cardtype'].lower() == 'monster':
             return MONSTER_CARD_TEMPLATE_NORMAL.format(
                 name = '[**{}**]'.format(card['name']),
-                image = '({})'.format(card['image']) if card['image'] else 'http://i.imgur.com/paNkvJ5.jpg',
+                image = '({})'.format(card['image']) if card['image'] else '(http://i.imgur.com/paNkvJ5.jpg)',
                 wikia = '[Wikia]({})'.format(card['wikia']),
                 infosyntax = ', ' if card['pricedata'] else '',
                 pricedata = '[($)]({})'.format(card['pricedata']) if card['pricedata'] else '')
         else:
             return SPELL_CARD_TEMPLATE_NORMAL.format(
                 name = '[**{}**]'.format(card['name']),
-                image = '({})'.format(card['image']) if card['image'] else 'http://i.imgur.com/paNkvJ5.jpg',
+                image = '({})'.format(card['image']) if card['image'] else '(http://i.imgur.com/paNkvJ5.jpg)',
                 wikia = '[Wikia]({})'.format(card['wikia']),
                 infosyntax = ', ' if card['pricedata'] else '',
                 pricedata = '[($)]({})'.format(card['pricedata']) if card['pricedata'] else '')
