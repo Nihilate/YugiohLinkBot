@@ -40,12 +40,19 @@ def sanitiseCardname(cardname):
 def getOCGCardURL(searchText):
     try:
         endPoint = '/Search/List?query='
-        resultLimit = '&limit=1'
+        resultLimit = '&limit=5'
         searchResults = requests.get(OCG_BASE_URL + endPoint + searchText + resultLimit)
-        data = searchResults.json()['items'][0]['url']
-        return data
     except:
         return None
+        
+    titles = [item['title'] for item in searchResults.json()['items']]
+    closest = difflib.get_close_matches(searchText, titles, 1, 0.85)[0]
+    
+    for item in searchResults.json()['items']:
+        if item['title'] == closest:
+            return item['url']
+
+    return None
 
 @lru_cache(maxsize=128)
 def getNonEnglishOCGCardData(searchText):

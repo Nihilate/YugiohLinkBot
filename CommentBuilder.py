@@ -20,7 +20,7 @@ SPELL_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\
                                 '{text}')
 
 BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}}) ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
-FLAVOUR_SIGNATURE = '^^| ^^New: [^^Version ^^2 ^^released!](https://www.reddit.com/r/yugioh/comments/3r73pk/yugiohlinkbot_v2_harder_better_faster_stronger/)'
+FLAVOUR_SIGNATURE = ' ^^| ^^New: ^^Wikia ^^searching ^^should ^^now ^^be ^^much ^^more ^^accurate.'
 SIGNATURE = BASE_SIGNATURE + FLAVOUR_SIGNATURE
 
 def getSignature():
