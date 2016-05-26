@@ -19,7 +19,7 @@ SPELL_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\
                                 '^({stats})\n\n'
                                 '{text}')
 
-BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}}) ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
+BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}} ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
 FLAVOUR_SIGNATURE = ' ^^| ^^New: ^^Wikia ^^searching ^^should ^^now ^^be ^^much ^^more ^^accurate.'
 SIGNATURE = BASE_SIGNATURE + FLAVOUR_SIGNATURE
 

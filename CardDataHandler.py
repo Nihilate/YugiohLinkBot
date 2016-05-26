@@ -45,12 +45,14 @@ def getOCGCardURL(searchText):
     except:
         return None
         
-    titles = [item['title'] for item in searchResults.json()['items']]
-    closest = difflib.get_close_matches(searchText, titles, 1, 0.85)[0]
-    
-    for item in searchResults.json()['items']:
-        if item['title'] == closest:
-            return item['url']
+    titles = [item['title'].lower() for item in searchResults.json()['items']]
+
+    results = difflib.get_close_matches(searchText.lower(), titles, 1, 0.85)
+
+    if results:
+        for item in searchResults.json()['items']:
+            if item['title'].lower() == results[0]:
+                return item['url']
 
     return None
 
@@ -220,7 +222,7 @@ def formatTCGData(data):
         formatted['wikia'] = getWikiaURL(data['name'])
         formatted['pricedata'] = getPricesURL(data['name'])
         formatted['image'] = data['image']
-        formatted['text'] = data['text'].replace('\n\n', '  \n')
+        formatted['text'] = re.sub('<!--(.*?)-->', '', data['text'].replace('\n\n', '  \n'))
         formatted['cardtype'] = data['card_type']
         
         if formatted['cardtype'].lower() == 'monster':
@@ -277,6 +279,7 @@ def getCardData(searchText):
         print('Searching for: ' + searchText)
         
         cardName = getClosestTCGCardname(searchText)
+        
         if (cardName): #TCG
             tcgData = getTCGCardData(sanitiseCardname(cardName))
 
