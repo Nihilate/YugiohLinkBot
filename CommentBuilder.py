@@ -19,9 +19,7 @@ SPELL_CARD_TEMPLATE_EXPANDED = ('{name}{image} - {wikia}{infosyntax}{pricedata}\
                                 '^({stats})\n\n'
                                 '{text}')
 
-BASE_SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}} ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
-FLAVOUR_SIGNATURE = ' ^^| ^^New: ^^Wikia ^^searching ^^should ^^now ^^be ^^much ^^more ^^accurate.'
-SIGNATURE = BASE_SIGNATURE + FLAVOUR_SIGNATURE
+SIGNATURE = '^^To ^^use: ^^{Normal} ^^or ^^{{Expanded}} ^^| [^^Issues?](http://www.reddit.com/message/compose/?to=Nihilate) ^^| [^^Source](https://github.com/Nihilate/YugiohLinkBot)'
 
 def getSignature():
     return SIGNATURE
@@ -37,14 +35,14 @@ def formatCardData(card, isExpanded):
                 wikia = '[Wikia]({})'.format(card['wikia']),
                 infosyntax = ', ' if card['pricedata'] else '',
                 pricedata = '[($)]({})'.format(card['pricedata']) if card['pricedata'] else '',
-                leveltype = '{}: '.format(card['leveltype']),
-                level = '{}, '.format(card['level']),
+                leveltype = '{}: '.format(card['leveltype']) if card['leveltype'] else '',
+                level = '{}, '.format(card['level']) if card['level'] else '',
                 cardtype = 'Category: {}, '.format(card['cardtype'].title()),
                 types = 'Type: {}, '.format(' / '.join(str(i[1]) for i in enumerate(card['types']))),
                 attribute = 'Attribute: {}'.format(card['attribute'].upper()),
                 text = '>{}'.format(card['text']),
-                att = '>ATK: {}, '.format(card['att']),
-                defn = 'DEF: {}'.format(card['def']),
+                att = '>ATK: {}'.format(card['att']),
+                defn = ', DEF: {}'.format(card['def']) if card['def'] else '',
                 stats = 'Stats: {total} requests - {percentage}% of all requests'.format(
                     total=requestStats['total'],
                     percentage=str(round(requestStats['totalAsPercentage'],2))))

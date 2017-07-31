@@ -81,5 +81,4 @@ class YugiohLinkBot(object):
                     print("Reddit probably broke when replying:" + str(e) + '\n')
                     
         except Exception as e:
-            print("Error with comment stream: " + str(e))
-            traceback.print_exc()
+            pass

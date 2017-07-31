@@ -229,14 +229,18 @@ def formatTCGData(data):
             formatted['attribute'] = data['family'].upper()
             formatted['types'] = data['type'].split('/')
 
-            if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
-                formatted['leveltype'] = 'Rank'
-            else:
-                formatted['leveltype'] = 'Level'
-
             formatted['level'] = data['level']
             formatted['att'] = data['atk']
             formatted['def'] = data['def']
+
+            if 'link' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = None
+                formatted['level'] = None
+                formatted['def'] = None
+            elif 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = 'Rank'
+            else:
+                formatted['leveltype'] = 'Level'
         else:
             formatted['property'] = data['property']
 
@@ -259,14 +263,18 @@ def formatOCGData(data):
             formatted['attribute'] = data['monster_attribute'].upper()
             formatted['types'] = data['monster_types']
 
-            if 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
-                formatted['leveltype'] = 'Rank'
-            else:
-                formatted['leveltype'] = 'Level'
-
             formatted['level'] = data['monster_level']
             formatted['att'] = data['monster_attack']
             formatted['def'] = data['monster_defense']
+
+            if 'link' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = None
+                formatted['level'] = None
+                formatted['def'] = None
+            elif 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
+                formatted['leveltype'] = 'Rank'
+            else:
+                formatted['leveltype'] = 'Level'
         else:
             formatted['property'] = data['spell_trap_property']
 
