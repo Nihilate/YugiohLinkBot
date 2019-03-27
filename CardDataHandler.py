@@ -11,25 +11,9 @@ import re
 import pprint
 import difflib
 
+WIKI_URL = 'https://yugipedia.com/wiki/'
 TCG_BASE_URL = 'http://yugiohprices.com/api'
-OCG_BASE_URL = 'http://yugioh.wikia.com/api/v1'
-
-toIgnore = ['anime)',
-            'manga)',
-            'card ruling',
-            'card galler',
-            'card errata',
-            'card tip',
-            'card appearance',
-            'card trivia',
-            'list of',
-            'card list',
-            'def',
-            'atk',
-            '(dor)',
-            '(cm)',
-            '(ddm)',
-            '(2)']
+OCG_BASE_URL = 'https://yugipedia.com/api.php'
 
 BREAK_TOKEN = '__BREAK__'
 
@@ -39,52 +23,23 @@ def sanitiseCardname(cardname):
 @lru_cache(maxsize=128)
 def getOCGCardURL(searchText):
     try:
-        endPoint = '/Search/List?query='
-        resultLimit = '&limit=5'
-        searchResults = requests.get(OCG_BASE_URL + endPoint + searchText + resultLimit)
+        searchResults = requests.get(OCG_BASE_URL + '?action=query&list=search&srsearch=' + searchText + '&srlimit=50&format=json')
     except:
+        traceback.print_exc()
         return None
-        
-    titles = [item['title'].lower() for item in searchResults.json()['items']]
+
+    data = searchResults.json()['query']['search']
+
+    titles = [item['title'].lower() for item in data]
 
     results = difflib.get_close_matches(searchText.lower(), titles, 1, 0.85)
 
     if results:
-        for item in searchResults.json()['items']:
+        for item in data:
             if item['title'].lower() == results[0]:
-                return item['url']
+                return getWikiaURL(item['title']) 
 
     return None
-
-@lru_cache(maxsize=128)
-def getNonEnglishOCGCardData(searchText):
-    try:
-        endPoint = '/Search/List?query='
-        resultLimit = '&limit=50'
-        searchResults = requests.get(OCG_BASE_URL + endPoint + searchText + resultLimit)
-        data = searchResults.json()['items']
-
-        cardURL = None
-
-        for result in data:
-            if True in [True if word.lower() in result['title'].lower() else False for word in toIgnore]:
-                continue
-            else:
-                cardURL = result['url']
-                
-                try:
-                    cardData = getOCGCardData(cardURL)
-                    closest = difflib.get_close_matches(searchText, cardData['languages'], 1, 0.95)[0]
-                    
-                    if closest:
-                        return cardData
-                except Exception as e:
-                    pass
-            
-        return None
-    except:
-        traceback.print_exc()
-        return None
 
 @lru_cache(maxsize=128)
 def getTCGCardImage(cardName):
@@ -106,6 +61,7 @@ def getTCGCardData(cardName):
     try:
         response = requests.get(TCG_BASE_URL + endPoint + quote_plus(cardName))
     except:
+        traceback.print_exc()
         return None
     else:
         response.connection.close()
@@ -125,74 +81,48 @@ def getOCGCardData(url):
 
         data = {
             'image': (card.find('td.cardtable-cardimage').eq(0)
-                      .find('img').eq(0).attr('src')),
-            'name': (card.find('tr.cardtablerow td.cardtablerowdata').eq(0).text()),
-            'type': ('trap' if card.find('img[alt="TRAP"]') else
-                     ('spell' if card.find('img[alt="SPELL"]') else
+                      .find('img').eq(0).attr('data-src')),
+            'name': (card.find('th.cardtable-header').eq(0).text()),
+            'type': ('trap' if card.find('a[title="Trap Card"]') else
+                     ('spell' if card.find('a[title="Spell Card"]') else
                       ('monster' if card.find('th a[title="Type"]') else
-                       'other'))),
-            'status_advanced': (statuses.find('th a[title="Advanced Format"]')
-                                .eq(0).parents('th').next().text()),
-            'status_traditional': (
-                statuses.find('th a[title="Traditional Format"]').eq(0)
-                .parents('th').next().text())
+                       'other')))
         }
 
-        data['languages'] = []
-
-        romajiCandidates = card.find('tr.cardtablerow th.cardtablerowheader')
-
-        for candidate in romajiCandidates.items():
-            if 'rōmaji' in candidate.text():
-                data['languages'].append(candidate.parents('tr').find('td').text())
-
-        try:
-            languages = card.find('tr.cardtablerow td.cardtablerowdata span')
-            for language in languages.items():
-                data['languages'].append(language.text())  
-        except Exception as e:
-            print(e)
-
-
-        description_element = (card.find('td table table').eq(0).find('tr').eq(2).find('td').eq(0))
-        description_element.html(re.sub(r'<br ?/?>', BREAK_TOKEN, description_element.html()))
-        description_element.html(re.sub(r'<a href=[^>]+>', '', description_element.html()))
-        description_element.html(re.sub(r'</a>', '', description_element.html()))
-        
-        data['description'] = process_string(description_element.text())
-     
-        data['description'] = data['description'].replace(BREAK_TOKEN, '\n')
-
-        try:
-            data['number'] = process_string(card.find('th a[title="Card Number"]')
-                                            .eq(0).parents('tr').eq(0).find('td a')
-                                            .eq(0).text())
-        except:
-            data['number'] = ''
-     
         if (data['type'] == 'monster'):
             data['monster_attribute'] = (card.find('th a[title="Attribute"]')
                                          .eq(0).parents('tr').eq(0)
                                          .find('td a').eq(0).text())
-     
-            try:
-                data['monster_level'] = int(process_string(
-                    card.find('th a[title="Level"]').eq(0).parents('tr').eq(0)
-                    .find('td a').eq(0).text()))
-            except:
+
+            data['monster_types'] = [monster_type.strip() for monster_type in (process_string(
+                card.find('th a[title="Type"]').eq(0).parents('tr').eq(0)
+                .find('td').eq(0).text())).split('/')]
+
+            if 'Link' in data['monster_types']:
+                data['monster_level'] = ' / '.join(str(process_string(
+                    card.find('th a[title="Link Arrow"]').eq(0).parents('tr').eq(0)
+                    .find('td a').text())).split(' '))
+            elif 'Xyz' in data['monster_types']:
                 data['monster_level'] = int(process_string(
                     card.find('th a[title="Rank"]').eq(0).parents('tr').eq(0)
                     .find('td a').eq(0).text()))
-     
+            else:
+                data['monster_level'] = int(process_string(
+                    card.find('th a[title="Level"]').eq(0).parents('tr').eq(0)
+                    .find('td a').eq(0).text()))
+
+            if 'Pendulum' in data['monster_types']:
+                data['pendulum_scale'] = int(process_string(
+                    card.find('th a[title="Pendulum Scale"]').eq(0).parents('tr').eq(0)
+                    .find('td a').eq(1).text()))
+            else:
+                data['pendulum_scale'] = None
+            
             atk_def = (card.find('th a[title="ATK"]').eq(0)
                        .parents('tr').eq(0).find('td').eq(0).text()).split('/')
      
             data['monster_attack'] = process_string(atk_def[0])
             data['monster_defense'] = process_string(atk_def[1])
-     
-            data['monster_types'] = (process_string(
-                card.find('th a[title="Type"]').eq(0).parents('tr').eq(0)
-                .find('td').eq(0).text())).split('/')
      
         elif (data['type'] == 'spell' or data['type'] == 'trap'):
             data['spell_trap_property'] = (
@@ -203,16 +133,30 @@ def getOCGCardData(url):
             for i, m_type in enumerate(data['monster_types']):
                 data['monster_types'][i] = data['monster_types'][i].strip()
 
+        description_element = card.find('.cardtablespanrow').html()        
+        description_element = re.sub(r'</dt>', ': </dt>' + BREAK_TOKEN, description_element)
+        description_element = re.sub(r'</dd>', '</dd>' + BREAK_TOKEN, description_element)
+        description_element = re.sub(r'<br ?/?>', BREAK_TOKEN, description_element)
+        description_element = re.sub(r'<a href=[^>]+>', '', description_element)
+        description_element = re.sub(r'</a>', '', description_element)
+        description_element = pq(description_element).text()
+        
+        data['description'] = process_string(description_element)     
+        data['description'] = data['description'].replace(BREAK_TOKEN, '\n')
+        data['description'] = re.sub(r':(?=\w)', ': ', data['description'])
+        data['description'] = re.sub(r'\.(?=\w)', '. ', data['description'])
+
         return data
         
     except:
+        traceback.print_exc()
         return None
 
 def getPricesURL(cardName):
     return "http://yugiohprices.com/card_price?name=" + cardName.replace(" ", "+")
 
 def getWikiaURL(cardName):
-    return "http://yugioh.wikia.com/wiki/" + cardName.replace(" ", "_")
+    return WIKI_URL + cardName.replace(" ", "_")
 
 def formatTCGData(data):
     try:
@@ -245,7 +189,8 @@ def formatTCGData(data):
             formatted['property'] = data['property']
 
         return formatted
-    except Exception as e:
+    except:
+        traceback.print_exc()
         return None
 
 def formatOCGData(data):
@@ -265,12 +210,14 @@ def formatOCGData(data):
 
             formatted['level'] = data['monster_level']
             formatted['att'] = data['monster_attack']
+            formatted['defn_type'] = 'DEF'
             formatted['def'] = data['monster_defense']
 
+            formatted['pendulum_scale'] = data['pendulum_scale']
+
             if 'link' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
-                formatted['leveltype'] = None
-                formatted['level'] = None
-                formatted['def'] = None
+                formatted['leveltype'] = 'Link Arrows'
+                formatted['defn_type'] = 'LINK'
             elif 'xyz' in ' '.join(str(i[1]).lower() for i in enumerate(formatted['types'])):
                 formatted['leveltype'] = 'Rank'
             else:
@@ -279,16 +226,16 @@ def formatOCGData(data):
             formatted['property'] = data['spell_trap_property']
 
         return formatted
-    except Exception as e:
+    except:
+        traceback.print_exc()
         return None
 
 def getCardData(searchText):
     try:
-        print('Searching for: ' + searchText)
-        
         cardName = getClosestTCGCardname(searchText)
         
         if (cardName): #TCG
+            print('Searching YGOPrices for: ' + searchText)
             tcgData = getTCGCardData(sanitiseCardname(cardName))
 
             formattedData = formatTCGData(tcgData)
@@ -300,36 +247,21 @@ def getCardData(searchText):
                 
             return formattedData
         else: #OCG
+            print('Searching Yugipedia for: ' + searchText)
             wikiURL = getOCGCardURL(searchText)
-            if (wikiURL):
-                ocgData = getOCGCardData(wikiURL)
 
+            if not wikiURL:
+                wikiURL = getWikiaURL(searchText)
+            
+            if (wikiURL):
+                ocgData = getOCGCardData(wikiURL)               
                 formattedData = formatOCGData(ocgData)
 
                 if formattedData:
                     print("(OCG) Found: " + ocgData['name'])
+                    return formattedData
                 else:
-                    lData = getNonEnglishOCGCardData(searchText)
-                    lFormattedData = formatOCGData(lData)
-
-                    if lFormattedData:
-                        print("(OCG-L) Found: " + lData['name'])
-                    else:
-                        print ("Card not found.")
-
-                    return lFormattedData
-
-                return formattedData
-            else:
-                lData = getNonEnglishOCGCardData(searchText)
-                lFormattedData = formatOCGData(lData)
-
-                if lFormattedData:
-                    print("(OCG-L) Found: " + lData['name'])
-                else:
-                    print ("Card not found.")
-
-                return lFormattedData
+                    return None
     except:
         traceback.print_exc()
         return None

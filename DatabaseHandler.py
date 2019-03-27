@@ -162,4 +162,4 @@ conn = psycopg2.connect("dbname='" + Config.dbname + "' user='" + Config.dbuser 
 cur = conn.cursor()
 
 setup()
-updateTCGCardlist()
+#updateTCGCardlist()

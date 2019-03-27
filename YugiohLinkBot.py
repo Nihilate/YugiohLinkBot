@@ -81,4 +81,5 @@ class YugiohLinkBot(object):
                     print("Reddit probably broke when replying:" + str(e) + '\n')
                     
         except Exception as e:
+            print(e)
             pass
